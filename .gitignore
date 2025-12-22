@@ -1,3 +1,9 @@
+.vscode
+.idea
+.DS_Store
+staticfiles/
+.envs/*
+!.envs/.env.example
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
