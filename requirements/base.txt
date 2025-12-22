@@ -21,6 +21,7 @@ idna==3.11
 inflection==0.5.1
 jsonschema==4.25.1
 jsonschema-specifications==2025.9.1
+loguru==0.7.3
 mypy_extensions==1.1.0
 oauthlib==3.3.1
 packaging==25.0
@@ -39,6 +40,7 @@ referencing==0.37.0
 requests==2.32.5
 requests-oauthlib==2.0.0
 rpds-py==0.30.0
+setuptools==80.9.0
 six==1.17.0
 social-auth-app-django==5.7.0
 social-auth-core==4.8.3
@@ -47,3 +49,4 @@ tzdata==2025.3
 uritemplate==4.2.0
 urllib3==2.6.2
 watchfiles==1.1.1
+win32_setctime==1.2.0
