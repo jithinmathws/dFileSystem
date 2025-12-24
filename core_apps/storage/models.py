@@ -1,6 +1,6 @@
 import uuid
 import os
-from django.db import models
+from django.db import models, transaction
 from django.utils import timezone
 from django.urls import reverse
 from django.conf import settings
@@ -138,11 +138,23 @@ class File(models.Model):
 
     def get_human_readable_size(self):
         """Convert size in bytes to human readable format."""
+        size = self.size
+        if size is None:
+            return "0.00 B"
+
+        try:
+            size = float(size)
+        except (TypeError, ValueError):
+            return "0.00 B"
+
+        if size < 0:
+            return "0.00 B"
+
         for unit in ['B', 'KB', 'MB', 'GB', 'TB']:
-            if self.size < 1024.0:
-                return f"{self.size:.2f} {unit}"
-            self.size /= 1024.0
-        return f"{self.size:.2f} PB"
+            if size < 1024.0:
+                return f"{size:.2f} {unit}"
+            size /= 1024.0
+        return f"{size:.2f} PB"
 
     def get_file_type(self):
         """Categorize file into types like image, document, etc."""
@@ -176,9 +188,18 @@ class Chunk(models.Model):
         on_delete=models.CASCADE,
         db_index=True
     )
+    object_key = models.CharField(
+        max_length=512,
+        default='',
+        blank=True,
+        db_index=True,
+        help_text="Node-local identifier/path to the stored chunk bytes"
+    )
     chunk_number = models.PositiveIntegerField(db_index=True)
     size = models.PositiveIntegerField(help_text="Chunk size in bytes")
     checksum = models.CharField(
+        null=True,
+        blank=True,
         max_length=64, 
         help_text="SHA-256 checksum of the chunk"
     )
@@ -193,6 +214,13 @@ class Chunk(models.Model):
         default=ChunkStatus.UPLOADING,
         db_index=True
     )
+    stored_checksum = models.CharField(
+        null=True,
+        blank=True,
+        max_length=64, 
+        help_text="SHA-256 checksum of the stored chunk"
+    )
+    last_verified_at = models.DateTimeField(null=True, blank=True, auto_now_add=True, db_index=True)
     created_at = models.DateTimeField(auto_now_add=True, db_index=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -212,10 +240,17 @@ class Chunk(models.Model):
 
     def mark_as_primary(self):
         """Mark this chunk as the primary copy."""
-        # Remove primary status from other chunks of the same file
-        self.file.chunks.filter(is_primary=True).update(is_primary=False)
-        self.is_primary = True
-        self.save(update_fields=['is_primary'])
+        # Primary should be per (file, chunk_number) across replicas (storage nodes)
+        with transaction.atomic():
+            Chunk.objects.select_for_update().filter(
+                file=self.file,
+                chunk_number=self.chunk_number,
+                is_primary=True,
+            ).exclude(pk=self.pk).update(is_primary=False)
+
+            if not self.is_primary:
+                self.is_primary = True
+                self.save(update_fields=['is_primary'])
 
     def verify_checksum(self, calculated_checksum):
         """Verify if the chunk's checksum matches the calculated one."""
@@ -241,7 +276,7 @@ class Chunk(models.Model):
                 Chunk.objects.filter(storage_node=storage_node)
             )
             storage_node.update_storage_metrics(used_space)
-
+    
 
 class FileVersion(models.Model):
     """Tracks different versions of a file."""

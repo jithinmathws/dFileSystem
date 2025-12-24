@@ -69,18 +69,18 @@ class ChunkInline(admin.TabularInline):
     model = Chunk
     extra = 0
     readonly_fields = ('size', 'checksum', 'status', 'created_at')
-    fields = ('chunk_number', 'storage_node', 'size', 'checksum', 'is_primary', 'status', 'created_at')
+    fields = ('chunk_number', 'storage_node', 'object_key', 'size', 'checksum', 'is_primary', 'status', 'created_at')
     show_change_link = True
 
 @admin.register(Chunk)
 class ChunkAdmin(admin.ModelAdmin):
-    list_display = ('id', 'file_name', 'chunk_number', 'storage_node', 'size_mb', 'status', 'is_primary')
+    list_display = ('id', 'file_name', 'chunk_number', 'storage_node', 'object_key', 'size_mb', 'status', 'is_primary')
     list_filter = ('status', 'is_primary', 'storage_node')
     search_fields = ('file__name', 'checksum')
     readonly_fields = ('created_at', 'updated_at')
     fieldsets = (
         ('Chunk Information', {
-            'fields': ('file', 'chunk_number', 'storage_node', 'size', 'checksum')
+            'fields': ('file', 'chunk_number', 'storage_node', 'object_key', 'size', 'checksum')
         }),
         ('Status', {
             'fields': ('is_primary', 'status', 'created_at', 'updated_at')

@@ -54,17 +54,20 @@ class ChunkSerializer(serializers.ModelSerializer):
     file_name = serializers.CharField(source='file.name', read_only=True)
     storage_node_name = serializers.CharField(source='storage_node.name', read_only=True)
     is_corrupted = serializers.BooleanField(read_only=True)
+    object_key = serializers.CharField(source='object_key', read_only=True)
+    stored_checksum = serializers.CharField(source='stored_checksum', read_only=True)
+    last_verified_at = serializers.DateTimeField(read_only=True)
 
     class Meta:
         model = Chunk
         fields = [
             'id', 'file', 'file_name', 'storage_node', 'storage_node_name',
-            'chunk_number', 'size', 'checksum', 'is_primary', 'status',
-            'is_corrupted', 'created_at', 'updated_at'
+            'object_key', 'chunk_number', 'size', 'checksum', 'is_primary', 'status',
+            'is_corrupted', 'stored_checksum', 'last_verified_at', 'created_at', 'updated_at'
         ]
         read_only_fields = [
             'id', 'file_name', 'storage_node_name', 'is_corrupted',
-            'created_at', 'updated_at'
+            'created_at', 'updated_at', 'object_key', 'stored_checksum', 'last_verified_at'
         ]
 
 class FileVersionSerializer(serializers.ModelSerializer):

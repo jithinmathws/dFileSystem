@@ -6,7 +6,7 @@ from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
-from storage.views import StorageNodeViewSet, FileViewSet, ChunkViewSet
+from core_apps.storage.views import StorageNodeViewSet, FileViewSet, ChunkViewSet, FileVersionViewSet
 
 def health_check(request):
     """Basic health check endpoint."""
@@ -21,6 +21,7 @@ router = DefaultRouter()
 router.register(r'nodes', StorageNodeViewSet, basename='storage-node')
 router.register(r'files', FileViewSet, basename='file')
 router.register(r'chunks', ChunkViewSet, basename='chunk')
+router.register(r'file-versions', FileVersionViewSet, basename='file-version')
 
 # API URL patterns
 api_urlpatterns = [
